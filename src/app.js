@@ -17,10 +17,21 @@ app.use(morgan(morganOption));
 app.use(helmet());
 app.use(cors());
 
+app.use(
+  (validateBearerToken = (req, res, next) => {
+    const apiToken = process.env.API_TOKEN;
+    const authToken = req.get("Authorization");
+    if (!authToken || authToken.split(" ")[1] !== apiToken) {
+      return res.status(401).json({ error: "Unauthorized access" });
+    }
+    next();
+  })
+);
+
 // Write a route handler for the endpoint GET /bookmarks
 // that returns a list of bookmarks
 
-app.get("/bookmarks", (req, res) => {
+app.get("/bookmarks", validateBearerToken, (req, res) => {
   res.json(bookmarks);
 });
 
@@ -28,7 +39,7 @@ app.get("/bookmarks", (req, res) => {
 // that returns a single bookmark with the given ID, return
 // 404 Not Found if the ID is not valid
 
-app.get("/bookmarks/:id", (req, res) => {
+app.get("/bookmarks/:id", validateBearerToken, (req, res) => {
   const { id } = req.params;
   const requestedBookmark = bookmarks.find((bookmark) => bookmark.id === id);
   if (requestedBookmark === undefined) {
@@ -39,10 +50,12 @@ app.get("/bookmarks/:id", (req, res) => {
 // Write a route handler for POST /bookmarks that accepts
 // a JSON object representing a bookmark and adds it to the
 // list of bookmarks after validation.
-app.post("/bookmarks", (req, res) => {
+
+app.post("/bookmarks", validateBearerToken, (req, res) => {
   const { title, url, description = false, rating } = req.body;
 
   // URL Validation REGEX
+
   function validURL(str) {
     var pattern = new RegExp(
       "^(https?:\\/\\/)?" + // protocol
@@ -57,6 +70,7 @@ app.post("/bookmarks", (req, res) => {
   }
 
   // Rating Validation
+
   function validRating(value) {
     if (parseInt(value, 10) >= 1 && parseInt(value, 10) <= 5) {
       return true;
@@ -120,7 +134,12 @@ app.post("/bookmarks", (req, res) => {
     .json({ id: id });
 });
 
-app.delete("/bookmarks/:id", (req, res) => {
+
+// Write a route handler for the endpoint DELETE 
+// /bookmarks/:id that deletes the bookmark with the 
+// given ID.
+
+app.delete("/bookmarks/:id", validateBearerToken, (req, res) => {
   const { id } = req.params;
   const indexOfBookmarks = bookmarks.findIndex(
     (bookmark) => bookmark.id == id
