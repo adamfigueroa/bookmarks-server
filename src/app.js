@@ -3,10 +3,8 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const helmet = require("helmet");
-const { PORT } = require("./config");
 const { NODE_ENV } = require("./config");
-const { v4: uuid } = require("uuid");
-const bookmarks = require("./bookmarks");
+const validateBearerToken = require("./validate-bearer-token")
 const bookmarkRouter = require("./bookmarks/bookmark-router")
 
 const app = express();
@@ -17,17 +15,7 @@ app.use(express.json());
 app.use(morgan(morganOption));
 app.use(helmet());
 app.use(cors());
-
-app.use(
-  (validateBearerToken = (req, res, next) => {
-    const apiToken = process.env.API_TOKEN;
-    const authToken = req.get("Authorization");
-    if (!authToken || authToken.split(" ")[1] !== apiToken) {
-      return res.status(401).json({ error: "Unauthorized access" });
-    }
-    next();
-  })
-);
+app.use(validateBearerToken);
 
 app.use(bookmarkRouter)
 
