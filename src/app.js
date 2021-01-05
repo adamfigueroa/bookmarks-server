@@ -3,7 +3,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const helmet = require("helmet");
-const { PORT } = require('./config')
+const { PORT } = require("./config");
 const { NODE_ENV } = require("./config");
 const { v4: uuid } = require("uuid");
 const bookmarks = require("./bookmarks");
@@ -44,30 +44,35 @@ app.post("/bookmarks", (req, res) => {
 
   // URL Validation REGEX
   function validURL(str) {
-    var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
-      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
-      '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
-      '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
-      '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
-      '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+    var pattern = new RegExp(
+      "^(https?:\\/\\/)?" + // protocol
+        "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
+        "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+        "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+        "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+        "(\\#[-a-z\\d_]*)?$",
+      "i"
+    ); // fragment locator
     return !!pattern.test(str);
   }
 
   // Rating Validation
-  function validRating(value) {      
+  function validRating(value) {
     if (parseInt(value, 10) >= 1 && parseInt(value, 10) <= 5) {
-        return true;
+      return true;
     } else {
-        return false; //not in range
+      return false; //not in range
     }
-}
+  }
 
   if (!title) {
     return res.status(400).json({ error: "Bookmark Title is required" });
   }
 
   if (title.length > 24 || title.length < 3) {
-    return res.status(400).json({ error: "Bookmark Title needs to be between 3 to 24 characters" });
+    return res
+      .status(400)
+      .json({ error: "Bookmark Title needs to be between 3 to 24 characters" });
   }
 
   if (!url) {
@@ -77,7 +82,11 @@ app.post("/bookmarks", (req, res) => {
   if (url) {
     const resultUrl = validURL(url);
     if (resultUrl === false) {
-      return res.status(400).json({ error: "URL is invalid, please format with (http:// or https://)" });
+      return res
+        .status(400)
+        .json({
+          error: "URL is invalid, please format with (http:// or https://)",
+        });
     }
   }
 
@@ -88,7 +97,11 @@ app.post("/bookmarks", (req, res) => {
   if (rating) {
     const ratingResult = validRating(rating);
     if (ratingResult === false) {
-      return res.status(400).json({ error: "Rating is invalid, please choose a number between 1 and 5" });
+      return res
+        .status(400)
+        .json({
+          error: "Rating is invalid, please choose a number between 1 and 5",
+        });
     }
   }
 
@@ -105,6 +118,18 @@ app.post("/bookmarks", (req, res) => {
     .status(201)
     .location(`http://localhost:${PORT}/bookmarks/${id}`)
     .json({ id: id });
+});
+
+app.delete("/bookmarks/:id", (req, res) => {
+  const { id } = req.params;
+  const indexOfBookmarks = bookmarks.findIndex(
+    (bookmark) => bookmark.id == id
+  );
+  if (indexOfBookmarks === -1) {
+    return res.status(404).send("Bookmark not found");
+  }
+  bookmarks.splice(indexOfBookmarks, 1);
+  res.status(204).end();
 });
 
 app.use(function errorHandler(error, req, res, next) {
