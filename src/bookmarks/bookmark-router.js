@@ -46,6 +46,7 @@ bookmarkRouter
     }
 
     if (!title) {
+        logger.error('Title is required')
       return res.status(400).json({ error: "Bookmark Title is required" });
     }
 
@@ -58,12 +59,14 @@ bookmarkRouter
     }
 
     if (!url) {
+        logger.error('URL is required')
       return res.status(400).json({ error: "URL is required" });
     }
 
     if (url) {
       const resultUrl = validURL(url);
       if (resultUrl === false) {
+          logger.error(`Url: ${url} is invalid`)
         return res.status(400).json({
           error: "URL is invalid, please format with (http:// or https://)",
         });
@@ -71,12 +74,14 @@ bookmarkRouter
     }
 
     if (!rating) {
+        logger.error('Rating is required')
       return res.status(400).json({ error: "Rating is required" });
     }
 
     if (rating) {
       const ratingResult = validRating(rating);
       if (ratingResult === false) {
+        logger.error(`Rating: ${rating} is invalid`)
         return res.status(400).json({
           error: "Rating is invalid, please choose a number between 1 and 5",
         });
@@ -107,7 +112,8 @@ bookmarkRouter
     const { id } = req.params;
     const requestedBookmark = bookmarks.find((bookmark) => bookmark.id === id);
     if (!requestedBookmark) {
-      return res.status(400).send(`There were no matches containing "${id}" `);
+        logger.error(`Bookmark id: ${id} not found`)
+      return res.status(404).send(`There were no matches containing "${id}" `);
     } else return res.json(requestedBookmark);
   })
 // Write a route handler for the endpoint DELETE 
